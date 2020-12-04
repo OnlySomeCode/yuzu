@@ -38,16 +38,4 @@ u64 MultiplyAndDivide64(u64 a, u64 b, u64 d) {
 
 #endif
 
-u128 Multiply64Into128(u64 a, u64 b) {
-    u128 result;
-#ifdef _MSC_VER
-    result[0] = _umul128(a, b, &result[1]);
-#else
-    unsigned __int128 tmp = a;
-    tmp *= b;
-    std::memcpy(&result, &tmp, sizeof(u128));
-#endif
-    return result;
-}
-
 } // namespace Common
