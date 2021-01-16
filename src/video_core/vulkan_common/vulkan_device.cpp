@@ -394,7 +394,7 @@ Device::Device(VkInstance instance_, vk::PhysicalDevice physical_, VkSurfaceKHR 
         robustness2 = {
             .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT,
             .pNext = nullptr,
-            .robustBufferAccess2 = false,
+            .robustBufferAccess2 = true,
             .robustImageAccess2 = true,
             .nullDescriptor = true,
         };
@@ -588,6 +588,7 @@ void Device::CheckSuitability() const {
     const VkPhysicalDeviceFeatures features{physical.GetFeatures()};
     const std::array feature_report{
         std::make_pair(features.vertexPipelineStoresAndAtomics, "vertexPipelineStoresAndAtomics"),
+        std::make_pair(features.robustBufferAccess, "robustBufferAccess"),
         std::make_pair(features.imageCubeArray, "imageCubeArray"),
         std::make_pair(features.independentBlend, "independentBlend"),
         std::make_pair(features.depthClamp, "depthClamp"),
@@ -756,7 +757,8 @@ std::vector<const char*> Device::LoadExtensions() {
         robustness2.pNext = nullptr;
         features.pNext = &robustness2;
         physical.GetFeatures2KHR(features);
-        if (robustness2.nullDescriptor && robustness2.robustImageAccess2) {
+        if (robustness2.nullDescriptor && robustness2.robustBufferAccess2 &&
+            robustness2.robustImageAccess2) {
             extensions.push_back(VK_EXT_ROBUSTNESS_2_EXTENSION_NAME);
             ext_robustness2 = true;
         }
