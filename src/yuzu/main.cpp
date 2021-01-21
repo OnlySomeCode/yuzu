@@ -1038,8 +1038,6 @@ bool GMainWindow::LoadROM(const QString& filename, std::size_t program_index) {
         std::make_unique<QtWebBrowser>(*this),         // Web Browser
     });
 
-    system.RegisterHostThread();
-
     const Core::System::ResultStatus result{
         system.Load(*render_window, filename.toStdString(), program_index)};
 
