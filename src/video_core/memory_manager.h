@@ -72,7 +72,7 @@ public:
     ~MemoryManager();
 
     /// Binds a renderer to the memory manager.
-    void BindRasterizer(VideoCore::RasterizerInterface& rasterizer);
+    void BindRasterizer(VideoCore::RasterizerInterface* rasterizer);
 
     [[nodiscard]] std::optional<VAddr> GpuToCpuAddress(GPUVAddr addr) const;
 
@@ -84,6 +84,9 @@ public:
 
     [[nodiscard]] u8* GetPointer(GPUVAddr addr);
     [[nodiscard]] const u8* GetPointer(GPUVAddr addr) const;
+
+    /// Returns the number of bytes until the end of the memory map containing the given GPU address
+    [[nodiscard]] size_t BytesToMapEnd(GPUVAddr gpu_addr) const noexcept;
 
     /**
      * ReadBlock and WriteBlock are full read and write operations over virtual
@@ -120,6 +123,14 @@ public:
     [[nodiscard]] GPUVAddr Allocate(std::size_t size, std::size_t align);
     void Unmap(GPUVAddr gpu_addr, std::size_t size);
 
+    /**
+     * Some Decoded NVDEC frames require that texture cache does not get invalidated.
+     * UnmapVicFrame defers the texture cache invalidation until the stream ends
+     * by invoking InvalidateQueuedCaches to invalidate all frame texture caches.
+     */
+    void UnmapVicFrame(GPUVAddr gpu_addr, std::size_t size);
+    void InvalidateQueuedCaches();
+
 private:
     [[nodiscard]] PageEntry GetPageEntry(GPUVAddr gpu_addr) const;
     void SetPageEntry(GPUVAddr gpu_addr, PageEntry page_entry, std::size_t size = page_size);
@@ -151,6 +162,10 @@ private:
     VideoCore::RasterizerInterface* rasterizer = nullptr;
 
     std::vector<PageEntry> page_table;
+    std::vector<std::pair<VAddr, std::size_t>> cache_invalidate_queue;
+
+    using MapRange = std::pair<GPUVAddr, size_t>;
+    std::vector<MapRange> map_ranges;
 };
 
 } // namespace Tegra
